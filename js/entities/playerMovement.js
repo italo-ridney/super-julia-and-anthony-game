@@ -1,5 +1,5 @@
 import { TILE, SNES_MOVE, POWER } from '../config.js';
-import { tileAtPx } from '../engine/collide.js';
+import { tileAtPx, probeWall, isBodyInWater } from '../engine/collide.js';
 
 export function applySnesHorizontal(player, input, running) {
   const M = SNES_MOVE;
@@ -36,6 +36,14 @@ export function applySnesHorizontal(player, input, running) {
 export function applySnesJump(player, input, audio) {
   const M = SNES_MOVE;
 
+  if (player.swimming) {
+    if (input.justPressed('jump')) {
+      player.vy = M.SWIM_RISE;
+      audio?.sfxJump?.();
+    }
+    return;
+  }
+
   if (input.justPressed('jump')) player.jumpBuf = M.JUMP_BUF;
   else if (player.jumpBuf > 0) player.jumpBuf -= 1;
 
@@ -70,13 +78,65 @@ export function applySnesJump(player, input, audio) {
 
 export function applySnesGravity(player, input) {
   const M = SNES_MOVE;
+  if (player.swimming) {
+    let g = M.SWIM_GRAVITY * (player.gravityMul ?? 1);
+    if (input.isDown('jump')) player.vy = Math.min(player.vy, M.SWIM_RISE);
+    player.vy += g;
+    if (player.vy > M.SWIM_MAX_FALL) player.vy = M.SWIM_MAX_FALL;
+    return;
+  }
   let g = M.GRAVITY * (player.gravityMul ?? 1);
+  if (player.vy < 0 && Math.abs(player.vy) < M.APEX_VEL_THRESHOLD) {
+    g *= M.APEX_GRAVITY_MUL;
+  } else if (player.vy > 0) {
+    g *= M.FALL_GRAVITY_MUL;
+  }
   if (player.vy < 0 && input.isDown('jump') && player.jumpHoldFrames > 0 && player.isJumping) {
     g *= M.JUMP_HOLD_GRAVITY_MUL;
     player.jumpHoldFrames -= 1;
   }
   player.vy += g;
   if (player.vy > M.MAX_FALL) player.vy = M.MAX_FALL;
+}
+
+export function updateWallSlide(player, map, input) {
+  const M = SNES_MOVE;
+  player.wallContact = probeWall(player, map);
+  player.wallSliding = false;
+  if (player.onGround || player.swimming) return;
+  const pressingIntoWall =
+    (player.wallContact === -1 && input.isDown('left')) ||
+    (player.wallContact === 1 && input.isDown('right'));
+  if (player.wallContact !== 0 && pressingIntoWall && player.vy > 0) {
+    player.wallSliding = true;
+    player.vy = Math.min(player.vy, M.WALL_SLIDE_MAX);
+    player.facing = player.wallContact;
+  }
+}
+
+export function updateSwimState(player, map) {
+  player.swimming = isBodyInWater(player, map);
+  if (player.swimming) {
+    player.onGround = false;
+    player.coyote = 0;
+  }
+}
+
+export function applySwimHorizontal(player, input, running) {
+  const M = SNES_MOVE;
+  const max = (running ? M.RUN_MAX : M.WALK_MAX) * player.runMul * M.SWIM_HORIZ_MUL;
+  const accel = M.GROUND_ACCEL * 0.7;
+  if (input.isDown('left')) {
+    player.vx -= accel;
+    player.facing = -1;
+  } else if (input.isDown('right')) {
+    player.vx += accel;
+    player.facing = 1;
+  } else {
+    player.vx *= 0.92;
+  }
+  if (player.vx > max) player.vx = max;
+  if (player.vx < -max) player.vx = -max;
 }
 
 /** ↓ + pulo em plataforma nuvem = atravessar */

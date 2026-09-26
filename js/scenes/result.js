@@ -1,6 +1,8 @@
 import { input } from '../input.js';
 import { buildLevel } from '../levels/build.js';
 import { P } from '../render/palette.js';
+import { drawSprite } from '../render/sprites.js';
+import { drawPortrait } from '../render/portraits.js';
 
 export function enter(game) {
   if (game.resultKind === 'victory' || game.resultKind === 'gameover') {
@@ -36,6 +38,11 @@ export function draw(game, ctx) {
     ctx.fillText('BOWSER NEGRO FOI DERROTADO!', 28, 80);
     ctx.font = '10px monospace';
     ctx.fillText('Julia e Anthony salvaram o reino!', 40, 110);
+    drawSprite(ctx, game.characterId || 'julia', 'victory', 48, 120, 1);
+    drawSprite(ctx, game.characterId === 'julia' ? 'rosalina' : 'mario', 'victory', 168, 120, -1);
+  }
+  if (game.resultKind === 'cleared') {
+    drawSprite(ctx, game.characterId || 'julia', 'victory', 108, 128, 1);
   }
   ctx.fillText('ENTER', 110, 180);
 }

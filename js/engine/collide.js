@@ -1,5 +1,5 @@
 import { TILE } from '../config.js';
-import { isSolid, isOneWay, isHazard, isGoal, isDoor, isCoin } from './tiles.js';
+import { isSolid, isOneWay, isHazard, isGoal, isDoor, isCoin, isWater } from './tiles.js';
 
 export function tileAtPx(map, px, py) {
   const tx = Math.floor(px / TILE);
@@ -27,6 +27,25 @@ function forTiles(map, box, fn) {
       fn(tx, ty, map.tiles[ty][tx]);
     }
   }
+}
+
+export function probeWall(player, map) {
+  const hb = player.getHitbox();
+  const mid = hb.y + hb.h * 0.45;
+  const foot = hb.y + hb.h - 2;
+  let wall = 0;
+  const left = tileAtPx(map, hb.x - 1, mid) || tileAtPx(map, hb.x - 1, foot);
+  const right = tileAtPx(map, hb.x + hb.w + 1, mid) || tileAtPx(map, hb.x + hb.w + 1, foot);
+  if (isSolid(left)) wall = -1;
+  if (isSolid(right)) wall = 1;
+  return wall;
+}
+
+export function isBodyInWater(player, map) {
+  const hb = player.getHitbox();
+  const cx = hb.x + hb.w / 2;
+  const cy = hb.y + hb.h * 0.55;
+  return isWater(tileAtPx(map, cx, cy)) || isWater(tileAtPx(map, cx, cy + 6));
 }
 
 export function moveActor(actor, map, onBump) {

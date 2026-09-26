@@ -13,6 +13,7 @@ export const T = {
   goal: 11,
   door: 12,
   solidDecor: 13,
+  water: 14,
 };
 
 export function isSolid(id) {
@@ -37,4 +38,8 @@ export function isDoor(id) {
 
 export function isCoin(id) {
   return id === 8;
+}
+
+export function isWater(id) {
+  return id === 14;
 }

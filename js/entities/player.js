@@ -11,6 +11,9 @@ import {
   canBreakBricks,
   updateCrouch,
   tryDropThrough,
+  updateWallSlide,
+  updateSwimState,
+  applySwimHorizontal,
 } from './playerMovement.js';
 import { CHARACTERS } from '../config.js';
 
@@ -43,6 +46,10 @@ export function createPlayer(characterId, x, y) {
     starSpin: 0,
     crouching: false,
     skidding: false,
+    swimming: false,
+    wallSliding: false,
+    wallContact: 0,
+    pose: null,
     _game: null,
     _reload: null,
     _onGameOver: null,
@@ -117,6 +124,7 @@ export function updatePlayer(player, input, map, ctx) {
   } = ctx;
 
   syncPowerFromState(player);
+  updateSwimState(player, map);
   updateCrouch(player, input);
   if (tryDropThrough(player, map, input)) {
     player.crouching = false;
@@ -124,9 +132,16 @@ export function updatePlayer(player, input, map, ctx) {
 
   const running = input.isDown('run') && !player.crouching;
 
-  applySnesHorizontal(player, input, running);
-  applySnesJump(player, input, audio);
-  applySnesGravity(player, input);
+  if (player.swimming) {
+    applySwimHorizontal(player, input, running);
+    applySnesJump(player, input, audio);
+    applySnesGravity(player, input);
+  } else {
+    applySnesHorizontal(player, input, running);
+    applySnesJump(player, input, audio);
+    applySnesGravity(player, input);
+    updateWallSlide(player, map, input);
+  }
 
   player.collectCoin = (tx, ty) => onCollectCoin?.(tx, ty);
   player.touchGoal = () => onTouchGoal?.();
@@ -171,8 +186,13 @@ export function updatePlayer(player, input, map, ctx) {
     }
   }
 
+  player.animTick += 1;
   const speed = Math.abs(player.vx);
-  if (!player.onGround) player.anim = 'jump';
+  if (player.swimming) {
+    player.anim = speed > 0.2 || input.isDown('jump') ? 'walk' : 'idle';
+  } else if (player.wallSliding) {
+    player.anim = 'jump';
+  } else if (!player.onGround) player.anim = 'jump';
   else if (speed > 0.3) {
     player.anim = speed > 1.8 && running ? 'run' : 'walk';
     player.animTick += 1;

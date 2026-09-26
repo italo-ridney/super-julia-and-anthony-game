@@ -46,6 +46,14 @@ export const SNES_MOVE = {
   STOMP_BOUNCE: -4.25,
   CROUCH_SPEED_MUL: 0.35,
   BUMP_VY: -2.2,
+  APEX_VEL_THRESHOLD: 1.35,
+  APEX_GRAVITY_MUL: 0.34,
+  FALL_GRAVITY_MUL: 1.22,
+  WALL_SLIDE_MAX: 1.35,
+  SWIM_GRAVITY: 0.12,
+  SWIM_MAX_FALL: 2.2,
+  SWIM_RISE: -3.2,
+  SWIM_HORIZ_MUL: 0.85,
 };
 
 /** Estados de poder (small → super → fire) */

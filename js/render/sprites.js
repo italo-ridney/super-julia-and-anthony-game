@@ -333,6 +333,55 @@ export function drawSpriteScaled(ctx, name, frame, x, y, scale = 2, facing = 1) 
   ctx.restore();
 }
 
-export function getSpriteFrame(actor) {
+function victoryGrid(base) {
+  const g = base.slice();
+  g[2] = '...w........w...';
+  g[3] = '..w..........w..';
+  return g;
+}
 
-[Showing lines 1-300 of 307. Use :301 to continue]
+const swimA = (base, leg) => jumpLegs(base, leg);
+const swimB = (base, leg) => {
+  const g = base.slice();
+  g[11] = '..' + leg + '......' + leg + '..';
+  g[12] = '...' + leg + '....' + leg + '...';
+  return g;
+};
+
+function withExtras(set, superBase, smallBase) {
+  set.wallSlide = pad24([...superBase.slice(0, 12), ...superBase.slice(14)]);
+  set.swim0 = swimA(superBase, 'bd');
+  set.swim1 = swimB(superBase, 'b');
+  set.swim2 = swimA(superBase, 'b');
+  set.swim3 = swimB(superBase, 'bd');
+  set.victory = victoryGrid(superBase);
+  if (smallBase) {
+    set.wallSlide = smallBase;
+    set.swim0 = smallBase;
+    set.swim1 = smallBase;
+    set.swim2 = smallBase;
+    set.swim3 = smallBase;
+    set.victory = victoryGrid(smallBase);
+  }
+}
+
+withExtras(SPRITES.anthony, anthonySuper, null);
+withExtras(SPRITES.anthonySmall, anthonySuper, anthonySmall);
+withExtras(SPRITES.julia, juliaSuper, null);
+withExtras(SPRITES.juliaSmall, juliaSuper, juliaSmall);
+withExtras(SPRITES.mario, marioSuper, null);
+withExtras(SPRITES.rosalina, rosalinaSuper, null);
+
+export function getSpriteFrame(actor) {
+  if (actor.pose === 'victory') return 'victory';
+  if (actor.swimming) {
+    const f = Math.floor((actor.animTick || 0) / 6) % 4;
+    return `swim${f}`;
+  }
+  if (actor.wallSliding) return 'wallSlide';
+  if (actor.crouching) return 'crouch';
+  if (actor.anim === 'jump' || (!actor.onGround && !actor.swimming)) return 'jump';
+  if (actor.anim === 'run') return actor.walkFrame ? 'walk1' : 'run';
+  if (actor.anim === 'walk' || actor.skidding) return actor.walkFrame ? 'walk1' : 'walk0';
+  return 'idle';
+}

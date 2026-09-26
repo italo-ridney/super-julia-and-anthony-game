@@ -10,6 +10,7 @@ export function buildLevel3() {
   const map = makeMap(240, 'sky', 'Céu Atlético');
   ground(map, 0, 16);
   ground(map, 230, 240);
+  fillRect(map, 17, 12, 213, 2, 14);
   for (const [x, y, w] of PLATFORMS) {
     fillRect(map, x, y, w, 1, 7);
     if (w >= 5) {

@@ -1,6 +1,7 @@
 import { P } from './palette.js';
 import { TILE, VIEW_W, VIEW_H } from '../config.js';
 import { drawInteractiveById } from './interactiveTiles.js';
+import { drawSmwGround, drawSmwWater } from './smwTerrain.js';
 
 const THEMES = {
   grass: P.sky,
@@ -89,19 +90,19 @@ export function drawTile(ctx, id, x, y, theme, tick = 0) {
   if (drawInteractiveById(ctx, id, sx, sy, theme, tick)) return;
 
   if (id === 1) {
-    const topGreen = theme === 'grass' || theme === 'sky';
-    fill(ctx, topGreen ? P.green : P.ground, sx, sy, TILE, 4);
-    fill(ctx, P.ground, sx, sy + 4, TILE, TILE - 4);
-    fill(ctx, P.groundD, sx, sy + TILE - 4, TILE, 4);
-    if (topGreen) {
-      fill(ctx, P.greenD, sx, sy + 3, TILE, 1);
-    }
+    drawSmwGround(ctx, sx, sy, theme);
+    return;
+  }
+  if (id === 14) {
+    drawSmwWater(ctx, sx, sy, tick);
     return;
   }
   if (id === 7) {
     if (theme === 'sky') {
-      fill(ctx, P.w, sx, sy + 6, TILE, 6);
+      fill(ctx, P.w, sx, sy + 5, TILE, 7);
       fill(ctx, P.cyan, sx + 2, sy + 8, TILE - 4, 4);
+      fill(ctx, P.k, sx + 4, sy + 9, 2, 2);
+      fill(ctx, P.k, sx + 10, sy + 9, 2, 2);
     } else {
       fill(ctx, P.brown, sx, sy + 8, TILE, 8);
       fill(ctx, P.brownD, sx, sy + 6, TILE, 2);
