@@ -1,0 +1,41 @@
+import { makeMap, ground, fillRect, put, addEnemy } from './build.js';
+
+export function buildLevel1() {
+  const map = makeMap(220, 'grass', 'Prado Florido');
+  ground(map, 0, 28);
+  ground(map, 32, 54);
+  ground(map, 59, 92);
+  ground(map, 97, 128);
+  ground(map, 134, 168);
+  ground(map, 173, 220);
+  fillRect(map, 18, 9, 4, 1, 7);
+  fillRect(map, 40, 8, 5, 1, 7);
+  fillRect(map, 74, 7, 6, 1, 7);
+  fillRect(map, 112, 9, 4, 1, 7);
+  fillRect(map, 150, 8, 8, 1, 7);
+  put(map, 19, 9, 3);
+  put(map, 41, 6, 3);
+  put(map, 76, 6, 3);
+  put(map, 113, 7, 3);
+  put(map, 152, 6, 3);
+  put(map, 20, 9, 4);
+  put(map, 75, 6, 2);
+  put(map, 77, 6, 2);
+  for (let x = 28; x <= 31; x++) put(map, x, 9, 8);
+  for (let x = 54; x <= 58; x++) put(map, x, 8, 8);
+  for (let x = 150; x <= 157; x++) put(map, x, 6, 8);
+  fillRect(map, 48, 11, 2, 2, 5);
+  fillRect(map, 160, 10, 2, 3, 5);
+  addEnemy(map, 'walker', 22, 12);
+  addEnemy(map, 'walker', 44, 12);
+  addEnemy(map, 'walker', 70, 12);
+  addEnemy(map, 'walker', 105, 12);
+  addEnemy(map, 'walker', 140, 12);
+  addEnemy(map, 'walker', 185, 12);
+  addEnemy(map, 'sheller', 82, 12);
+  addEnemy(map, 'sheller', 155, 12);
+  map.spawn = { x: 3 * 16, y: 11 * 16 };
+  put(map, 214, 11, 11);
+  put(map, 214, 12, 11);
+  return map;
+}
