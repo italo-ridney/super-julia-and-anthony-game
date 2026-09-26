@@ -287,20 +287,52 @@ export function getPlayerSpriteKey(player) {
   return small ? `${player.characterId}Small` : player.characterId;
 }
 
-export function drawSprite(ctx, name, frame, x, y, facing = 1) {
+function spriteGrid(name, frame) {
   const set = SPRITES[name];
-  if (!set) return;
-  const grid = set[frame] || set.idle;
+  if (!set) return null;
+  return set[frame] || set.idle;
+}
+
+export function drawSprite(ctx, name, frame, x, y, facing = 1) {
+  const grid = spriteGrid(name, frame);
   if (!grid) return;
   const small = name.endsWith('Small');
   const oy = small ? 8 : 0;
   blit(ctx, grid, charMap, Math.floor(x), Math.floor(y) + oy, facing < 0);
 }
 
-export function getSpriteFrame(actor) {
-  if (actor.crouching) return 'crouch';
-  if (actor.anim === 'jump' || !actor.onGround) return 'jump';
-  if (actor.anim === 'run') return actor.walkFrame ? 'walk1' : 'run';
-  if (actor.anim === 'walk' || actor.skidding) return actor.walkFrame ? 'walk1' : 'walk0';
-  return 'idle';
+/** Preview em menus (2×, 3×) — pixelado */
+export function drawSpriteScaled(ctx, name, frame, x, y, scale = 2, facing = 1) {
+  const grid = spriteGrid(name, frame);
+  if (!grid || scale <= 1) {
+    drawSprite(ctx, name, frame, x, y, facing);
+    return;
+  }
+  const small = name.endsWith('Small');
+  const oy = small ? 8 : 0;
+  const h = grid.length;
+  const w = grid[0].length;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  for (let row = 0; row < h; row++) {
+    const line = grid[row];
+    for (let col = 0; col < w; col++) {
+      const fc = facing < 0 ? line[w - 1 - col] : line[col];
+      if (fc === '.') continue;
+      const color = charMap[fc];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(
+        Math.floor(x + col * scale),
+        Math.floor(y + (row + oy) * scale),
+        scale,
+        scale,
+      );
+    }
+  }
+  ctx.restore();
 }
+
+export function getSpriteFrame(actor) {
+
+[Showing lines 1-300 of 307. Use :301 to continue]
