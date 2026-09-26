@@ -1,24 +1,32 @@
-import { SNES_MOVE, POWER } from '../config.js';
+import { TILE, SNES_MOVE, POWER } from '../config.js';
+import { tileAtPx } from '../engine/collide.js';
 
 export function applySnesHorizontal(player, input, running) {
   const M = SNES_MOVE;
-  const max = (running ? M.RUN_MAX : M.WALK_MAX) * player.runMul;
+  let max = (running ? M.RUN_MAX : M.WALK_MAX) * player.runMul;
+  if (player.crouching) max *= M.CROUCH_SPEED_MUL;
+
   const accel = (running ? M.RUN_ACCEL : M.GROUND_ACCEL) * (player.onGround ? 1 : M.AIR_ACCEL_MUL);
 
+  player.skidding = false;
   if (input.isDown('left')) {
-    if (player.onGround && player.vx > M.SKID_THRESHOLD) player.vx -= M.SKID_DECEL;
-    else player.vx -= accel;
+    if (player.onGround && player.vx > M.SKID_THRESHOLD) {
+      player.vx -= M.SKID_DECEL;
+      player.skidding = true;
+    } else player.vx -= accel;
     player.facing = -1;
   } else if (input.isDown('right')) {
-    if (player.onGround && player.vx < -M.SKID_THRESHOLD) player.vx += M.SKID_DECEL;
-    else player.vx += accel;
+    if (player.onGround && player.vx < -M.SKID_THRESHOLD) {
+      player.vx += M.SKID_DECEL;
+      player.skidding = true;
+    } else player.vx += accel;
     player.facing = 1;
   } else if (player.onGround) {
     if (player.vx > 0) player.vx = Math.max(0, player.vx - M.GROUND_FRICTION);
     else if (player.vx < 0) player.vx = Math.min(0, player.vx + M.GROUND_FRICTION);
     if (Math.abs(player.vx) < 0.04) player.vx = 0;
   } else {
-    player.vx *= 0.98;
+    player.vx *= 0.985;
   }
 
   if (player.vx > max) player.vx = max;
@@ -31,7 +39,12 @@ export function applySnesJump(player, input, audio) {
   if (input.justPressed('jump')) player.jumpBuf = M.JUMP_BUF;
   else if (player.jumpBuf > 0) player.jumpBuf -= 1;
 
+  const dropThrough = input.isDown('down') && input.justPressed('jump');
+  if (dropThrough && player.onGround) return;
+
   const wantJump = input.justPressed('jump') || player.jumpBuf > 0;
+  if (player.crouching) return;
+
   if ((player.onGround || player.coyote > 0) && wantJump) {
     player.vy = M.JUMP_V * player.jumpMul;
     player.coyote = 0;
@@ -66,6 +79,25 @@ export function applySnesGravity(player, input) {
   if (player.vy > M.MAX_FALL) player.vy = M.MAX_FALL;
 }
 
+/** ↓ + pulo em plataforma nuvem = atravessar */
+export function tryDropThrough(player, map, input) {
+  if (!input.isDown('down') || !input.justPressed('jump') || !player.onGround) return false;
+  const hb = player.getHitbox();
+  const cx = hb.x + hb.w / 2;
+  const feet = hb.y + hb.h - 1;
+  const id = tileAtPx(map, cx, feet);
+  if (id !== 7) return false;
+  player.y += 6;
+  player.onGround = false;
+  player.vy = 1.2;
+  return true;
+}
+
+export function updateCrouch(player, input) {
+  player.crouching =
+    input.isDown('down') && player.onGround && !player.isJumping && Math.abs(player.vy) < 0.5;
+}
+
 export function syncPowerFromState(player) {
   if (player.state === 'small') player.power = POWER.SMALL;
   else if (player.state === 'fire') player.power = POWER.FIRE;
@@ -85,4 +117,8 @@ export function canBreakBricks(player) {
 
 export function stompBounceVy() {
   return SNES_MOVE.STOMP_BOUNCE;
+}
+
+export function bumpRecoilVy() {
+  return SNES_MOVE.BUMP_VY;
 }

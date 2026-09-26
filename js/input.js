@@ -4,19 +4,13 @@ const pressed = new Set();
 const BIND = {
   left: ['ArrowLeft', 'KeyA'],
   right: ['ArrowRight', 'KeyD'],
+  down: ['ArrowDown', 'KeyS'],
   jump: ['Space', 'KeyZ', 'KeyW', 'ArrowUp'],
   run: ['ShiftLeft', 'ShiftRight', 'KeyX'],
   special: ['KeyC', 'KeyK'],
   confirm: ['Enter'],
   pause: ['Escape', 'KeyP'],
 };
-
-function actionForCode(code) {
-  for (const [action, codes] of Object.entries(BIND)) {
-    if (codes.includes(code)) return action;
-  }
-  return null;
-}
 
 export const input = {
   attach(target) {
@@ -36,10 +30,10 @@ export const input = {
   },
   isDown(action) {
     const codes = BIND[action];
-    return codes.some((c) => held.has(c));
+    return codes?.some((c) => held.has(c)) ?? false;
   },
   justPressed(action) {
     const codes = BIND[action];
-    return codes.some((c) => pressed.has(c));
+    return codes?.some((c) => pressed.has(c)) ?? false;
   },
 };

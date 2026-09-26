@@ -9,6 +9,8 @@ import {
   syncPowerFromState,
   stompBounceVy,
   canBreakBricks,
+  updateCrouch,
+  tryDropThrough,
 } from './playerMovement.js';
 import { CHARACTERS } from '../config.js';
 
@@ -39,6 +41,8 @@ export function createPlayer(characterId, x, y) {
     runMul: def.runMul,
     breakBricks: def.breakBricks,
     starSpin: 0,
+    crouching: false,
+    skidding: false,
     _game: null,
     _reload: null,
     _onGameOver: null,
@@ -51,7 +55,10 @@ export function createPlayer(characterId, x, y) {
 
     getHitbox() {
       if (this.power === POWER.SMALL || this.state === 'small') {
-        return { x: this.x + 2, y: this.y + 2, w: 12, h: 14 };
+        return { x: this.x + 2, y: this.y + 10, w: 12, h: 14 };
+      }
+      if (this.crouching) {
+        return { x: this.x + 2, y: this.y + 10, w: 12, h: 14 };
       }
       return { x: this.x + 2, y: this.y, w: 12, h: 24 };
     },
@@ -110,7 +117,12 @@ export function updatePlayer(player, input, map, ctx) {
   } = ctx;
 
   syncPowerFromState(player);
-  const running = input.isDown('run');
+  updateCrouch(player, input);
+  if (tryDropThrough(player, map, input)) {
+    player.crouching = false;
+  }
+
+  const running = input.isDown('run') && !player.crouching;
 
   applySnesHorizontal(player, input, running);
   applySnesJump(player, input, audio);

@@ -25,25 +25,27 @@ export const PARTNER_CD = 240;
  * Parâmetros inspirados no game feel do Super Mario World (SNES).
  * Usados por js/entities/playerMovement.js
  */
+/** Valores calibrados para sensação próxima ao Super Mario World */
 export const SNES_MOVE = {
-  GRAVITY: 0.38,
-  MAX_FALL: 6.5,
-  WALK_MAX: 1.45,
-  RUN_MAX: 2.55,
-  GROUND_ACCEL: 0.095,
-  RUN_ACCEL: 0.135,
-  AIR_ACCEL_MUL: 0.48,
-  GROUND_FRICTION: 0.088,
-  SKID_DECEL: 0.22,
-  SKID_THRESHOLD: 1.05,
-  JUMP_V: -6.35,
-  JUMP_CUT: 0.42,
-  /** Gravidade reduzida enquanto segura pulo (subida) */
-  JUMP_HOLD_GRAVITY_MUL: 0.5,
-  JUMP_HOLD_MAX_FRAMES: 26,
+  GRAVITY: 0.42,
+  MAX_FALL: 7,
+  WALK_MAX: 1.52,
+  RUN_MAX: 2.72,
+  GROUND_ACCEL: 0.102,
+  RUN_ACCEL: 0.148,
+  AIR_ACCEL_MUL: 0.42,
+  GROUND_FRICTION: 0.092,
+  SKID_DECEL: 0.26,
+  SKID_THRESHOLD: 1.15,
+  JUMP_V: -6.65,
+  JUMP_CUT: 0.38,
+  JUMP_HOLD_GRAVITY_MUL: 0.42,
+  JUMP_HOLD_MAX_FRAMES: 30,
   COYOTE: 6,
   JUMP_BUF: 8,
-  STOMP_BOUNCE: -4.0,
+  STOMP_BOUNCE: -4.25,
+  CROUCH_SPEED_MUL: 0.35,
+  BUMP_VY: -2.2,
 };
 
 /** Estados de poder (small → super → fire) */
@@ -60,7 +62,7 @@ export const CHARACTERS = {
     tag: 'Ginasta · inteligente · educada · amorosa',
     partnerId: 'rosalina',
     partnerName: 'Princesa Rosalina',
-    jumpMul: 1.18,
+    jumpMul: 1.12,
     runMul: 0.92,
     breakBricks: false,
   },

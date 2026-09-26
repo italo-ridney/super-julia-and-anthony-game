@@ -1,41 +1,214 @@
 import { P } from './palette.js';
 import { blit } from './blit.js';
+import { POWER } from '../config.js';
 
 const charMap = {
-  k: P.k, w: P.w, s: P.skin, h: P.hair, p: P.pink, pd: P.pinkD,
-  b: P.blue, bd: P.blueD, r: P.red, rd: P.redD, c: P.cyan, cd: P.cyanD,
-  g: P.gold, gn: P.green, gnd: P.greenD, br: P.brown, e: P.eye, gr: P.gray, bl: P.black,
+  k: P.k,
+  w: P.w,
+  s: P.skin,
+  h: P.hair,
+  p: P.pink,
+  pd: P.pinkD,
+  b: P.blue,
+  bd: P.blueD,
+  r: P.red,
+  rd: P.redD,
+  c: P.cyan,
+  cd: P.cyanD,
+  g: P.gold,
+  gn: P.green,
+  gnd: P.greenD,
+  br: P.brown,
+  brd: P.brownD,
+  e: P.eye,
+  gr: P.gray,
+  bl: P.black,
+  o: P.ground,
 };
 
 function pad16(rows) {
-  while (rows.length < 16) rows.push('.'.repeat(12));
-  return rows.map((r) => (r.length >= 12 ? r.slice(0, 12) : r + '.'.repeat(12 - r.length)));
+  while (rows.length < 16) rows.push('................');
+  return rows.map((r) => (r.length >= 16 ? r.slice(0, 16) : r + '.'.repeat(16 - r.length)));
 }
 
-function body16(top, mid, bot, hair = 'h') {
-  const rows = [];
-  for (let i = 0; i < 4; i++) rows.push('....' + hair.repeat(4) + '....');
-  for (let i = 0; i < 4; i++) rows.push('...' + 's'.repeat(6) + '...');
-  for (let i = 0; i < 8; i++) rows.push('..' + top + mid.repeat(4) + top + '..');
-  for (let i = 0; i < 4; i++) rows.push('..' + bot + bot + '..' + bot + bot + '..');
-  for (let i = 0; i < 4; i++) rows.push('...' + bot + '..' + bot + '...');
-  return rows.slice(0, 24);
+function pad24(rows) {
+  while (rows.length < 24) rows.push('................');
+  return rows.map((r) => (r.length >= 16 ? r.slice(0, 16) : r + '.'.repeat(16 - r.length)));
 }
 
-function juliaJump() {
-  const r = body16('p', 'pd', 'pd');
-  r[14] = 'p..........p';
-  r[15] = 'p..........p';
-  r[16] = '..pd....pd..';
-  return r;
+/** Herói estilo Mario 16-bit: boné, rosto, macacão (arte original) */
+function plumberSuper(cap, capD, overall, overallD, trim) {
+  return pad24([
+    '................',
+    '....' + cap + cap + cap + cap + '....',
+    '...' + cap + cap + cap + cap + cap + cap + '...',
+    '...' + cap + cap + cap + cap + cap + cap + '...',
+    '....' + capD + 'ssss' + capD + '....',
+    '....ssssssss....',
+    '...s' + trim + 'ss' + trim + 's...',
+    '..s' + overall + overall + overall + overall + 's..',
+    '.' + overall + overall + overall + overall + overall + overall + '.',
+    '.' + overall + overall + overall + overall + overall + overall + '.',
+    '.' + overallD + overall + overall + overall + overallD + '.',
+    '..' + overallD + '....' + overallD + '..',
+    '..' + overallD + '....' + overallD + '..',
+    '...' + trim + trim + '..' + trim + trim + '...',
+    '...' + trim + trim + '..' + trim + trim + '...',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ]);
 }
 
-function anthonyBody() {
-  const rows = body16('b', 'bd', 'bd');
-  rows[8] = '.b' + 'bd'.repeat(5) + 'b.';
-  rows[9] = 'b' + 'bd'.repeat(6) + 'b';
-  return rows;
+function plumberSmall(cap, capD, overall, trim) {
+  return pad16([
+    '................',
+    '....' + cap + cap + cap + '....',
+    '...' + cap + cap + cap + cap + '...',
+    '...' + capD + 'ssss' + capD + '...',
+    '....ssssssss....',
+    '..s' + overall + overall + overall + 's..',
+    '.' + overall + overall + overall + overall + '.',
+    '.' + overall + overall + overall + overall + '.',
+    '..' + trim + '....' + trim + '..',
+    '..' + trim + '....' + trim + '..',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ]);
 }
+
+function gymnastSuper(suit, suitD, bow) {
+  return pad24([
+    '................',
+    '....' + bow + bow + bow + bow + '....',
+    '...' + bow + 'hhhh' + bow + '...',
+    '....hhhhhhhh....',
+    '....ssssssss....',
+    '...ssssssssss...',
+    '..s' + suit + suit + suit + suit + 's..',
+    '.' + suit + suit + suit + suit + suit + suit + '.',
+    '.' + suit + suit + suit + suit + suit + suit + '.',
+    '.' + suitD + suit + suit + suit + suitD + '.',
+    '..' + suit + '....' + suit + '..',
+    '..' + suit + '....' + suit + '..',
+    '...' + suitD + '....' + suitD + '...',
+    '...' + suitD + '....' + suitD + '...',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ]);
+}
+
+function gymnastSmall(suit, suitD, bow) {
+  return pad16([
+    '................',
+    '....' + bow + bow + bow + '....',
+    '....hhhhhhhh....',
+    '....ssssssss....',
+    '..s' + suit + suit + suit + 's..',
+    '.' + suit + suit + suit + suit + '.',
+    '..' + suitD + '..' + suitD + '..',
+    '..' + suitD + '..' + suitD + '..',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+  ]);
+}
+
+function jumpLegs(base, leg) {
+  const g = base.slice();
+  g[12] = '...' + leg + '......' + leg + '...';
+  g[13] = '...' + leg + '......' + leg + '...';
+  g[14] = '..' + leg + '........' + leg + '..';
+  return g;
+}
+
+const anthonySuper = plumberSuper('r', 'rd', 'b', 'bd', 'br');
+const anthonySmall = plumberSmall('r', 'rd', 'b', 'br');
+const marioSuper = plumberSuper('r', 'rd', 'b', 'bd', 'br');
+const juliaSuper = gymnastSuper('p', 'pd', 'g');
+const juliaSmall = gymnastSmall('p', 'pd', 'g');
+const rosalinaSuper = gymnastSuper('c', 'cd', 'g');
+
+const goomba = pad16([
+  '................',
+  '....brbrbrbr....',
+  '...brbrbrbrbr...',
+  '..brssssssbr..',
+  '.brssseessebr.',
+  '.brssssssssbr.',
+  '..brbrbrbrbr..',
+  '...br....br...',
+  '...br....br...',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+]);
+
+const koopaWalk = pad16([
+  '................',
+  '....gngngn....',
+  '...gngngngn...',
+  '..gngngngngn..',
+  '..gnssssgn..',
+  '...gnssgn...',
+  '...gnssgn...',
+  '..gngngngn..',
+  '..gn....gn..',
+  '..gn....gn..',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+]);
+
+const koopaShell = pad16([
+  '................',
+  '................',
+  '...gngngngn...',
+  '..gngngngngn..',
+  '.gngngngngngn.',
+  '.gngngngngngn.',
+  '..gngngngngn..',
+  '...gngngngn...',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+]);
 
 function makeBossGrid(hurt = false) {
   const g = Array.from({ length: 64 }, () => Array.from({ length: 64 }, () => '.'));
@@ -45,33 +218,89 @@ function makeBossGrid(hurt = false) {
   for (let y = 12; y < 28; y++) for (let x = 8; x < 20; x++) g[y][x] = 'gr';
   g[18][22] = 'e';
   g[18][26] = 'e';
-  g[22][20] = 'w';
-  g[22][28] = 'w';
-  for (let x = 40; x < 64; x++) g[40 + (x % 8)][x] = 'bl';
   return g.map((row) => row.join(''));
 }
 
 const SPRITES = {
-  julia: { idle: body16('p', 'pd', 'pd'), walk0: body16('p', 'pd', 'pd'), walk1: body16('p', 'pd', 'pd'), jump: juliaJump() },
-  anthony: { idle: anthonyBody(), walk0: anthonyBody(), walk1: anthonyBody(), jump: anthonyBody() },
-  rosalina: { idle: body16('c', 'cd', 'cd', 'g'), walk0: body16('c', 'cd', 'cd', 'g'), walk1: body16('c', 'cd', 'cd', 'g'), jump: body16('c', 'cd', 'cd', 'g') },
-  mario: { idle: body16('r', 'rd', 'b', 'r'), walk0: body16('r', 'rd', 'b', 'r'), walk1: body16('r', 'rd', 'b', 'r'), jump: body16('r', 'rd', 'b', 'r') },
-  walker: { idle: pad16(['....brbr....', '..brbrbrbr..']), walk0: pad16(['....brbr....', '..brbrbrbr..']), walk1: pad16(['....brbr....', '..brbrbr..']), jump: pad16([]) },
-  sheller: { idle: pad16(['....gngn....', '..gngngngn..']), walk0: pad16(['....gngn....']), walk1: pad16(['....gngn....']), shell: pad16(['..gngngngn..']), jump: pad16([]) },
-  flyer: { idle: pad16(['..wwgrgrww..']), walk0: pad16(['..wwwwwwww..']), walk1: pad16(['..wwwwwwww..']), jump: pad16([]) },
-  boss: { idle: makeBossGrid(), walk0: makeBossGrid(), walk1: makeBossGrid(), hurt: makeBossGrid(true), dying: makeBossGrid(true) },
+  anthony: {
+    idle: anthonySuper,
+    walk0: jumpLegs(anthonySuper, 'bd'),
+    walk1: jumpLegs(anthonySuper, 'b'),
+    jump: jumpLegs(anthonySuper, 'bd'),
+    crouch: pad24([...anthonySuper.slice(0, 10), ...anthonySuper.slice(14)]),
+    run: jumpLegs(anthonySuper, 'b'),
+  },
+  anthonySmall: {
+    idle: anthonySmall,
+    walk0: anthonySmall,
+    walk1: plumberSmall('r', 'rd', 'b', 'bd'),
+    jump: plumberSmall('r', 'rd', 'b', 'bd'),
+    crouch: anthonySmall,
+  },
+  julia: {
+    idle: juliaSuper,
+    walk0: jumpLegs(juliaSuper, 'pd'),
+    walk1: jumpLegs(juliaSuper, 'p'),
+    jump: jumpLegs(juliaSuper, 'pd'),
+    crouch: pad24([...juliaSuper.slice(0, 10), ...juliaSuper.slice(14)]),
+    run: jumpLegs(juliaSuper, 'p'),
+  },
+  juliaSmall: {
+    idle: juliaSmall,
+    walk0: juliaSmall,
+    walk1: gymnastSmall('p', 'pd', 'g'),
+    jump: gymnastSmall('p', 'pd', 'g'),
+    crouch: juliaSmall,
+  },
+  mario: {
+    idle: marioSuper,
+    walk0: jumpLegs(marioSuper, 'bd'),
+    walk1: jumpLegs(marioSuper, 'b'),
+    jump: jumpLegs(marioSuper, 'bd'),
+    crouch: marioSuper,
+  },
+  rosalina: {
+    idle: rosalinaSuper,
+    walk0: jumpLegs(rosalinaSuper, 'cd'),
+    walk1: jumpLegs(rosalinaSuper, 'c'),
+    jump: jumpLegs(rosalinaSuper, 'cd'),
+  },
+  walker: { idle: goomba, walk0: goomba, walk1: goomba, jump: goomba },
+  sheller: { idle: koopaWalk, walk0: koopaWalk, walk1: koopaWalk, shell: koopaShell, jump: koopaShell },
+  flyer: {
+    idle: pad16(['..wwwwwwwwwwww..', '..wwgrgrgrgrww..', '....grgrgrgr....']),
+    walk0: pad16(['..wwwwwwwwwwww..']),
+    walk1: pad16(['....wwwwwwww....']),
+    jump: pad16([]),
+  },
+  boss: {
+    idle: makeBossGrid(),
+    walk0: makeBossGrid(),
+    walk1: makeBossGrid(),
+    hurt: makeBossGrid(true),
+    dying: makeBossGrid(true),
+  },
 };
+
+export function getPlayerSpriteKey(player) {
+  const small = player.power === POWER.SMALL || player.state === 'small';
+  return small ? `${player.characterId}Small` : player.characterId;
+}
 
 export function drawSprite(ctx, name, frame, x, y, facing = 1) {
   const set = SPRITES[name];
   if (!set) return;
   const grid = set[frame] || set.idle;
   if (!grid) return;
-  blit(ctx, grid, charMap, Math.floor(x), Math.floor(y), facing < 0);
+  const small = name.endsWith('Small');
+  const oy = small ? 8 : 0;
+  blit(ctx, grid, charMap, Math.floor(x), Math.floor(y) + oy, facing < 0);
 }
 
 export function getSpriteFrame(actor) {
+  if (actor.crouching) return 'crouch';
   if (actor.anim === 'jump' || !actor.onGround) return 'jump';
-  if (actor.anim === 'walk' || actor.anim === 'run') return actor.walkFrame ? 'walk1' : 'walk0';
+  if (actor.anim === 'run') return actor.walkFrame ? 'walk1' : 'run';
+  if (actor.anim === 'walk' || actor.skidding) return actor.walkFrame ? 'walk1' : 'walk0';
   return 'idle';
 }
