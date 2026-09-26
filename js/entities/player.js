@@ -1,6 +1,6 @@
 import { INVULN, POWER } from '../config.js';
 import { moveActor } from '../engine/collide.js';
-import { drawSprite, getSpriteFrame } from '../render/sprites.js';
+import { drawSprite, getSpriteFrame, getPlayerSpriteKey } from '../render/sprites.js';
 import { stompEnemy, kickShell, overlap } from './enemy.js';
 import {
   applySnesHorizontal,
@@ -192,7 +192,7 @@ export { canBreakBricks };
 export function drawPlayer(ctx, player, camera, tick) {
   if (player.invuln > 0 && (tick & 3) === 0) return;
   const frame = getSpriteFrame(player);
-  drawSprite(ctx, player.characterId, frame, player.x - camera.x, player.y, player.facing);
+  drawSprite(ctx, getPlayerSpriteKey(player), frame, player.x - camera.x, player.y, player.facing);
   if (player.starSpin > 0) {
     const hb = player.getHitbox();
     const cx = Math.floor(hb.x + hb.w / 2 - camera.x);

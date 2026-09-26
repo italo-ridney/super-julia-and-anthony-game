@@ -4,7 +4,7 @@ import { audio } from '../audio.js';
 import { camera, updateCamera, resetCamera } from '../engine/camera.js';
 import { buildLevel, makeBossArena } from '../levels/build.js';
 import { drawBackground, drawTile } from '../render/tileset.js';
-import { drawSprite, getSpriteFrame } from '../render/sprites.js';
+import { drawSprite, getSpriteFrame, getPlayerSpriteKey } from '../render/sprites.js';
 import { drawHud } from '../render/hud.js';
 import { createPlayer, updatePlayer, canBreakBricks } from '../entities/player.js';
 import { createPartner, updatePartner, afterPlayerUpdate } from '../entities/partner.js';
@@ -330,7 +330,7 @@ export function draw(game, ctx) {
   if (showPlayer) {
     drawSprite(
       ctx,
-      player.characterId,
+      getPlayerSpriteKey(player),
       getSpriteFrame(player),
       player.x - camera.x,
       player.y - camera.y,
