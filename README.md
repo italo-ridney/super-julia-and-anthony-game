@@ -12,7 +12,11 @@ python3 -m http.server 8080
 
 Abra no navegador: [http://localhost:8080](http://localhost:8080)
 
-(É necessário um servidor local por causa dos módulos ES.)
+Ou: `./serve.sh`
+
+(É necessário um servidor local por causa dos módulos ES. **Não** abra `index.html` pelo Finder — a tela fica preta.)
+
+**Não abre?** Confira que o terminal está na pasta do jogo, que aparece `Serving HTTP on ... port 8080`, e recarregue com **Ctrl+Shift+R**. Se a porta estiver ocupada: `python3 -m http.server 8888` e use `http://localhost:8888`.
 
 ## Controles
 

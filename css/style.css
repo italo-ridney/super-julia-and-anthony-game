@@ -20,3 +20,29 @@ html, body {
   image-rendering: crisp-edges;
   background: #000;
 }
+
+#boot-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 12px;
+  font: 12px/1.4 monospace;
+  color: #ccc;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #444;
+  max-width: 90vw;
+  text-align: center;
+  z-index: 10;
+}
+
+#boot-hint.boot-ok {
+  display: none;
+}
+
+#boot-hint.boot-error {
+  color: #ffb0b0;
+  border-color: #a04040;
+  white-space: pre-wrap;
+}

@@ -1,6 +1,8 @@
 let ctx = null;
 let loopTimer = null;
 let loopGain = null;
+let audioUnlocked = false;
+let pendingLoop = null;
 
 function midiToFreq(m) {
   return 440 * 2 ** ((m - 69) / 12);
@@ -17,15 +19,27 @@ function ensureCtx() {
   return ctx;
 }
 
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  const c = ensureCtx();
+  if (c && c.state === 'suspended') c.resume();
+  if (pendingLoop) {
+    const name = pendingLoop;
+    pendingLoop = null;
+    audio.playLoop(name);
+  }
+}
+
 export const audio = {
   hookFirstGesture() {
-    window.addEventListener('keydown', () => {
-      const c = ensureCtx();
-      if (c && c.state === 'suspended') c.resume();
-    }, { once: true });
+    const onGesture = () => unlockAudio();
+    window.addEventListener('keydown', onGesture, { once: true });
+    window.addEventListener('pointerdown', onGesture, { once: true });
   },
   beep(freq, durSec, type = 'square', gain = 0.06) {
-    const c = ensureCtx();
+    if (!audioUnlocked) return;
+    const c = ctx;
     if (!c) return;
     const o = c.createOscillator();
     const g = c.createGain();
@@ -44,7 +58,11 @@ export const audio = {
   },
   playLoop(name) {
     this.stopLoop();
-    const c = ensureCtx();
+    if (!audioUnlocked) {
+      pendingLoop = name;
+      return;
+    }
+    const c = ctx;
     if (!c) return;
     const loops = {
       title: { notes: [64, 67, 71, 76, 74, 71, 69, 67], frames: 20, type: 'square', gain: 0.035 },
