@@ -44,10 +44,10 @@ export function createPlayer(characterId, x, y) {
     _reload: null,
     _onDie: null,
 
-    bind(game, reload, onDie) {
+    bind(game, reload, onGameOver) {
       this._game = game;
       this._reload = reload;
-      this._onDie = onDie;
+      this._onGameOver = onGameOver;
     },
 
     getHitbox() {
@@ -64,9 +64,11 @@ export function createPlayer(characterId, x, y) {
       game.lives -= 1;
       if (game.lives > 0 && this._reload) {
         this._reload();
+      } else if (this._onGameOver) {
+        this._onGameOver();
       } else {
-        game.scene = 'result';
         game.resultKind = 'gameover';
+        game.scene = 'result';
       }
     },
 

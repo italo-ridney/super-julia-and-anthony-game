@@ -58,9 +58,8 @@ export function updateBoss(boss, player, map, projectiles, ctx) {
     boss.phaseTimer -= 1;
     if (boss.phaseTimer <= 0) {
       boss.dead = true;
-      ctx.game.scene = 'result';
-      ctx.game.resultKind = 'victory';
       ctx.game.score += 5000;
+      ctx.deferVictory?.();
     }
     return;
   }

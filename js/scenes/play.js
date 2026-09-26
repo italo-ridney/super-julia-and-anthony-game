@@ -20,6 +20,7 @@ import {
 } from '../entities/items.js';
 
 let router = () => {};
+let deferred = null;
 let gameRef = null;
 let map = null;
 let player = null;
@@ -111,10 +112,11 @@ function playCtx() {
       }
     },
     onTouchGoal: () => {
+      if (deferred) return;
       if (!gameRef.inBoss && gameRef.levelIndex <= 3) {
         addScore(gameRef, 1000);
         audio.sfxClear();
-        router('result', 'cleared');
+        deferred = { scene: 'result', kind: 'cleared' };
       }
     },
     onTouchDoor: () => {
@@ -128,6 +130,9 @@ function playCtx() {
     onStomp: () => addScore(gameRef, 100),
     onBossHit: () => addScore(gameRef, 500),
     onEnemyKill: () => addScore(gameRef, 100),
+    deferVictory: () => {
+      if (!deferred) deferred = { scene: 'result', kind: 'victory' };
+    },
   };
 }
 
@@ -171,8 +176,18 @@ function loadStage() {
   }
 
   player = createPlayer(gameRef.characterId, map.spawn.x, map.spawn.y);
-  player.bind(gameRef, () => loadStage());
+  player.bind(
+    gameRef,
+    () => {
+      deferred = 'reload';
+    },
+    () => {
+      gameRef.resultKind = 'gameover';
+      deferred = { scene: 'result', kind: 'gameover' };
+    },
+  );
   partner = createPartner(gameRef.characterId);
+  deferred = null;
 
   audio.stopLoop();
   const loopName = gameRef.inBoss ? 'boss' : themeLoop[map.theme] || 'grass';
@@ -248,6 +263,13 @@ export function update(game) {
   });
 
   if (!camera.lock) updateCamera(player, map);
+
+  if (deferred) {
+    const d = deferred;
+    deferred = null;
+    if (d === 'reload') loadStage();
+    else router(d.scene, d.kind);
+  }
 }
 
 export function draw(game, ctx) {

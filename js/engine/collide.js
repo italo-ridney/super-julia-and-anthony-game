@@ -66,10 +66,22 @@ export function moveActor(actor, map, onBump) {
   if (actor.y > map.pixelH + 32 && actor.dieFromFall) actor.dieFromFall();
 
   box = actor.getHitbox();
+  let hazardHit = false;
+  let goalHit = false;
+  let doorHit = false;
   forTiles(map, box, (tx, ty, id) => {
-    if (isHazard(id) && actor.takeHazardDamage) actor.takeHazardDamage();
+    if (isHazard(id) && actor.takeHazardDamage && !hazardHit) {
+      hazardHit = true;
+      actor.takeHazardDamage();
+    }
     if (isCoin(id) && actor.collectCoin) actor.collectCoin(tx, ty);
-    if (isGoal(id) && actor.touchGoal) actor.touchGoal();
-    if (isDoor(id) && actor.touchDoor) actor.touchDoor();
+    if (isGoal(id) && actor.touchGoal && !goalHit) {
+      goalHit = true;
+      actor.touchGoal();
+    }
+    if (isDoor(id) && actor.touchDoor && !doorHit) {
+      doorHit = true;
+      actor.touchDoor();
+    }
   });
 }

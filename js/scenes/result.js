@@ -2,7 +2,11 @@ import { input } from '../input.js';
 import { buildLevel } from '../levels/build.js';
 import { P } from '../render/palette.js';
 
-export function enter() {}
+export function enter(game) {
+  if (game.resultKind === 'victory' || game.resultKind === 'gameover') {
+    game.inBoss = false;
+  }
+}
 
 export function update(game) {
   if (input.justPressed('confirm')) {

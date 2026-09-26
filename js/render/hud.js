@@ -5,7 +5,7 @@ export function drawHud(ctx, game) {
   const coins = String(game.coins).padStart(2, '0');
   const world = `${game.levelIndex + 1}-1`;
   const time = String(Math.max(0, game.time)).padStart(3, '0');
-  const base = `${name} | x${game.lives} | cx${coins} | ${world} | ${time}`;
+  const base = `${name} | ×${game.lives} | c×${coins} | ${world} | ${time}`;
   ctx.font = '8px monospace';
   ctx.fillStyle = '#f8f8f8';
   ctx.fillText(base, 4, 8);
