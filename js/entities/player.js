@@ -1,20 +1,16 @@
-import {
-  CHARACTERS,
-  COYOTE,
-  JUMP_BUF,
-  JUMP_CUT,
-  JUMP_V,
-  INVULN,
-  FRICTION,
-  WALK_ACCEL,
-  RUN_ACCEL,
-  WALK_MAX,
-  RUN_MAX,
-} from '../config.js';
-import { applyGravity } from '../engine/physics.js';
+import { INVULN, POWER } from '../config.js';
 import { moveActor } from '../engine/collide.js';
 import { drawSprite, getSpriteFrame } from '../render/sprites.js';
 import { stompEnemy, kickShell, overlap } from './enemy.js';
+import {
+  applySnesHorizontal,
+  applySnesJump,
+  applySnesGravity,
+  syncPowerFromState,
+  stompBounceVy,
+  canBreakBricks,
+} from './playerMovement.js';
+import { CHARACTERS } from '../config.js';
 
 export function createPlayer(characterId, x, y) {
   const def = CHARACTERS[characterId];
@@ -27,11 +23,14 @@ export function createPlayer(characterId, x, y) {
     w: 16,
     h: 24,
     state: 'super',
+    power: POWER.SUPER,
     facing: 1,
     onGround: false,
     invuln: 0,
     coyote: 0,
     jumpBuf: 0,
+    jumpHoldFrames: 0,
+    isJumping: false,
     gravityMul: 1,
     anim: 'idle',
     walkFrame: 0,
@@ -42,7 +41,7 @@ export function createPlayer(characterId, x, y) {
     starSpin: 0,
     _game: null,
     _reload: null,
-    _onDie: null,
+    _onGameOver: null,
 
     bind(game, reload, onGameOver) {
       this._game = game;
@@ -51,10 +50,10 @@ export function createPlayer(characterId, x, y) {
     },
 
     getHitbox() {
-      if (this.state === 'super') {
-        return { x: this.x + 2, y: this.y, w: 12, h: 24 };
+      if (this.power === POWER.SMALL || this.state === 'small') {
+        return { x: this.x + 2, y: this.y + 2, w: 12, h: 14 };
       }
-      return { x: this.x + 2, y: this.y + 2, w: 12, h: 14 };
+      return { x: this.x + 2, y: this.y, w: 12, h: 24 };
     },
 
     die() {
@@ -75,8 +74,10 @@ export function createPlayer(characterId, x, y) {
     takeDamage(audio) {
       if (this.invuln > 0 || this.starSpin > 0) return;
       audio?.sfxDamage?.();
-      if (this.state === 'super') {
+      syncPowerFromState(this);
+      if (this.power !== POWER.SMALL) {
         this.state = 'small';
+        this.power = POWER.SMALL;
         this.invuln = INVULN;
         this.vx = -2 * this.facing;
       } else {
@@ -92,6 +93,7 @@ export function createPlayer(characterId, x, y) {
       this.die();
     },
   };
+  syncPowerFromState(player);
   return player;
 }
 
@@ -107,41 +109,12 @@ export function updatePlayer(player, input, map, ctx) {
     onTouchDoor,
   } = ctx;
 
-  if (input.justPressed('jump')) player.jumpBuf = JUMP_BUF;
-  else if (player.jumpBuf > 0) player.jumpBuf -= 1;
-
+  syncPowerFromState(player);
   const running = input.isDown('run');
-  const accel = running ? RUN_ACCEL : WALK_ACCEL;
-  const max = (running ? RUN_MAX : WALK_MAX) * player.runMul;
 
-  if (input.isDown('left')) {
-    player.vx -= accel;
-    player.facing = -1;
-  } else if (input.isDown('right')) {
-    player.vx += accel;
-    player.facing = 1;
-  } else {
-    if (player.vx > 0) player.vx = Math.max(0, player.vx - FRICTION);
-    else if (player.vx < 0) player.vx = Math.min(0, player.vx + FRICTION);
-    if (Math.abs(player.vx) < 0.05) player.vx = 0;
-  }
-  if (player.vx > max) player.vx = max;
-  if (player.vx < -max) player.vx = -max;
-
-  applyGravity(player);
-
-  const wantJump = input.justPressed('jump') || player.jumpBuf > 0;
-  if ((player.onGround || player.coyote > 0) && wantJump) {
-    player.vy = JUMP_V * player.jumpMul;
-    player.coyote = 0;
-    player.jumpBuf = 0;
-    player.onGround = false;
-    audio?.sfxJump?.();
-  }
-  if (!input.isDown('jump') && player.vy < 0) player.vy *= JUMP_CUT;
-
-  if (player.onGround) player.coyote = COYOTE;
-  else if (player.coyote > 0) player.coyote -= 1;
+  applySnesHorizontal(player, input, running);
+  applySnesJump(player, input, audio);
+  applySnesGravity(player, input);
 
   player.collectCoin = (tx, ty) => onCollectCoin?.(tx, ty);
   player.touchGoal = () => onTouchGoal?.();
@@ -153,11 +126,12 @@ export function updatePlayer(player, input, map, ctx) {
   if (player.starSpin > 0) player.starSpin -= 1;
 
   const hb = player.getHitbox();
+  const bounce = stompBounceVy();
   for (const e of enemies) {
     if (e.dead) continue;
     if (!overlap(hb, e)) continue;
     if (stompEnemy(e, player)) {
-      player.vy = -4;
+      player.vy = bounce;
       ctx.game.score += 100;
       audio?.sfxStomp?.();
       if (e.type === 'sheller' && e.shell && Math.abs(e.vx) < 0.1) kickShell(e, player);
@@ -166,7 +140,7 @@ export function updatePlayer(player, input, map, ctx) {
     if (e.type === 'sheller' && e.shell && Math.abs(e.vx) > 0.1) {
       if (player.vy > 0 && hb.y + hb.h <= e.y + 8) {
         e.vx = 0;
-        player.vy = -4;
+        player.vy = bounce;
       } else player.takeDamage(audio);
     } else {
       player.takeDamage(audio);
@@ -185,11 +159,13 @@ export function updatePlayer(player, input, map, ctx) {
     }
   }
 
+  const speed = Math.abs(player.vx);
   if (!player.onGround) player.anim = 'jump';
-  else if (Math.abs(player.vx) > 0.3) {
-    player.anim = 'walk';
+  else if (speed > 0.3) {
+    player.anim = speed > 1.8 && running ? 'run' : 'walk';
     player.animTick += 1;
-    if (player.animTick >= 6) {
+    const frameRate = running ? 4 : 6;
+    if (player.animTick >= frameRate) {
       player.animTick = 0;
       player.walkFrame ^= 1;
     }
@@ -199,11 +175,12 @@ export function updatePlayer(player, input, map, ctx) {
   }
 }
 
+export { canBreakBricks };
+
 export function drawPlayer(ctx, player, camera, tick) {
   if (player.invuln > 0 && (tick & 3) === 0) return;
   const frame = getSpriteFrame(player);
-  const name = player.characterId;
-  drawSprite(ctx, name, frame, player.x - camera.x, player.y, player.facing);
+  drawSprite(ctx, player.characterId, frame, player.x - camera.x, player.y, player.facing);
   if (player.starSpin > 0) {
     const hb = player.getHitbox();
     const cx = Math.floor(hb.x + hb.w / 2 - camera.x);

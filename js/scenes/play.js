@@ -6,7 +6,7 @@ import { buildLevel, makeBossArena } from '../levels/build.js';
 import { drawBackground, drawTile } from '../render/tileset.js';
 import { drawSprite, getSpriteFrame } from '../render/sprites.js';
 import { drawHud } from '../render/hud.js';
-import { createPlayer, updatePlayer } from '../entities/player.js';
+import { createPlayer, updatePlayer, canBreakBricks } from '../entities/player.js';
 import { createPartner, updatePartner, afterPlayerUpdate } from '../entities/partner.js';
 import { createEnemy, updateEnemy, shellHits } from '../entities/enemy.js';
 import { createBoss, updateBoss } from '../entities/boss.js';
@@ -79,7 +79,7 @@ function onBump(tx, ty, id) {
   const row = map.tiles[ty];
   if (!row) return;
   if (id === 2) {
-    if (player.breakBricks && player.state === 'super') {
+    if (canBreakBricks(player)) {
       row[tx] = 0;
       spawnBrickParticles(tx, ty);
     }

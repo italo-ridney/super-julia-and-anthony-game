@@ -72,6 +72,6 @@ export function drawSprite(ctx, name, frame, x, y, facing = 1) {
 
 export function getSpriteFrame(actor) {
   if (actor.anim === 'jump' || !actor.onGround) return 'jump';
-  if (actor.anim === 'walk') return actor.walkFrame ? 'walk1' : 'walk0';
+  if (actor.anim === 'walk' || actor.anim === 'run') return actor.walkFrame ? 'walk1' : 'walk0';
   return 'idle';
 }
