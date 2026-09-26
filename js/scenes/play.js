@@ -8,8 +8,8 @@ import { drawSprite, getSpriteFrame } from '../render/sprites.js';
 import { drawHud } from '../render/hud.js';
 import { createPlayer, updatePlayer } from '../entities/player.js';
 import { createPartner, updatePartner, afterPlayerUpdate } from '../entities/partner.js';
-import { createEnemy, updateEnemy } from '../entities/enemy.js';
-import { createBoss, updateBoss, bossHitByProjectile } from '../entities/boss.js';
+import { createEnemy, updateEnemy, shellHits } from '../entities/enemy.js';
+import { createBoss, updateBoss } from '../entities/boss.js';
 import { updateProjectiles, drawProjectile, pruneProjectiles } from '../entities/projectile.js';
 import {
   spawnCoinPopup,
@@ -211,7 +211,10 @@ export function update(game) {
   updatePartner(partner, player, input, ctx);
   afterPlayerUpdate(player, partner);
 
-  for (const e of enemies) updateEnemy(e, map, player, ctx);
+  for (const e of enemies) {
+    updateEnemy(e, map, player, ctx);
+    if (e.type === 'sheller' && e.shell && Math.abs(e.vx) > 0.1) shellHits(enemies, e);
+  }
   enemies = enemies.filter((e) => !e.dead);
 
   if (boss) updateBoss(boss, player, map, projectiles, ctx);

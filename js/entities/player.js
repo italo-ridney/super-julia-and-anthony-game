@@ -60,6 +60,7 @@ export function createPlayer(characterId, x, y) {
     die() {
       const game = this._game;
       if (!game) return;
+      this._audio?.sfxDeath?.();
       game.lives -= 1;
       if (game.lives > 0 && this._reload) {
         this._reload();

@@ -79,8 +79,6 @@ export function updatePartner(partner, player, input, ctx) {
     partner.cooldown = PARTNER_CD;
     audio?.sfxFireball?.();
   }
-
-  afterPlayerUpdate(player, partner);
 }
 
 export function afterPlayerUpdate(player, partner) {

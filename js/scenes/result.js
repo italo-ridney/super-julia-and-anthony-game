@@ -8,6 +8,7 @@ export function update(game) {
   if (input.justPressed('confirm')) {
     if (game.resultKind === 'cleared') {
       game.levelIndex++;
+      game.inBoss = false;
       game.scene = 'play';
     } else {
       game.scene = 'title';
